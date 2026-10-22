@@ -1,0 +1,42 @@
+name: Full Docker smoke test
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  docker-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      MYSQL_ROOT_PASSWORD: ci-only-root-password
+      DB_PASSWORD: ci-only-app-password
+      SPEECH_TOKEN: ci-only-internal-token
+      APP_ORIGIN: http://localhost:4200
+      WHISPER_MODEL: small
+      MAX_STREAMS: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Build and start all services
+        run: docker compose up --build -d
+      - name: Wait for the model and API
+        run: |
+          for attempt in $(seq 1 90); do
+            if curl -fsS http://localhost:4200/api/readiness; then exit 0; fi
+            sleep 5
+          done
+          docker compose logs
+          exit 1
+      - name: Stream a public speech fixture and verify MySQL CRUD
+        run: |
+          pip install -r speech-service/requirements.txt
+          curl -fsSL https://raw.githubusercontent.com/ggerganov/whisper.cpp/master/samples/jfk.wav -o /tmp/jfk.wav
+          python speech-service/smoke_stream.py /tmp/jfk.wav
+      - name: Show container state
+        if: always()
+        run: docker compose ps && docker compose logs --tail=50
+      - name: Stop isolated test services
+        if: always()
+        run: docker compose down -v
