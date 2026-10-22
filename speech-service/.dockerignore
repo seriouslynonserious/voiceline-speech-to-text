@@ -1,0 +1,9 @@
+node_modules
+.angular
+dist
+target
+.venv
+__pycache__
+.pytest_cache
+*.log
+.env

@@ -1,0 +1,29 @@
+spring:
+  session:
+    timeout: 30d
+    jdbc.initialize-schema: never
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/voiceline?connectionTimeZone=UTC}
+    username: ${DB_USER:voiceline}
+    password: ${DB_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate.ddl-auto: validate
+  flyway.enabled: true
+  jackson.serialization.write-dates-as-timestamps: false
+server:
+  forward-headers-strategy: framework
+  servlet.session:
+    timeout: 30d
+    cookie:
+      http-only: true
+      max-age: 30d
+      same-site: strict
+      secure: ${COOKIE_SECURE:false}
+management.endpoints.web.exposure.include: health
+app:
+  origin: ${APP_ORIGIN:http://localhost:4200}
+  speech-url: ${SPEECH_URL:ws://localhost:8000/stream}
+  speech-health-url: ${SPEECH_HEALTH_URL:http://localhost:8000/health}
+  speech-token: ${SPEECH_TOKEN}
+  max-streams: ${MAX_STREAMS:2}

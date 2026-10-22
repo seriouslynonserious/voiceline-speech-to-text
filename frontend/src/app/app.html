@@ -1,0 +1,525 @@
+<svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs>
+    <symbol id="mic" viewBox="0 0 24 24">
+      <rect x="9" y="2" width="6" height="12" rx="3" />
+      <path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8" />
+    </symbol>
+    <symbol id="grid" viewBox="0 0 24 24">
+      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+      <rect x="14" y="3" width="7" height="7" rx="1.5" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+    </symbol>
+    <symbol id="history" viewBox="0 0 24 24">
+      <path d="M3 11a9 9 0 1 1 2.5 7M3 4v7h7M12 7v5l3 2" />
+    </symbol>
+    <symbol id="file" viewBox="0 0 24 24">
+      <path d="M14 2H5v20h14V7zM14 2v5h5M8 12h8m-8 4h6" />
+    </symbol>
+    <symbol id="arrow" viewBox="0 0 24 24">
+      <path d="M4 12h16m-6-6 6 6-6 6" />
+    </symbol>
+    <symbol id="copy" viewBox="0 0 24 24">
+      <rect x="8" y="8" width="12" height="13" rx="2" />
+      <path d="M15 8V3H3v13h5" />
+    </symbol>
+    <symbol id="download" viewBox="0 0 24 24">
+      <path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" />
+    </symbol>
+    <symbol id="search" viewBox="0 0 24 24">
+      <circle cx="10" cy="10" r="6" />
+      <path d="m15 15 6 6" />
+    </symbol>
+    <symbol id="close" viewBox="0 0 24 24">
+      <path d="m6 6 12 12M6 18 18 6" />
+    </symbol>
+    <symbol id="trash" viewBox="0 0 24 24">
+      <path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7" />
+    </symbol>
+    <symbol id="globe" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" />
+      <ellipse cx="12" cy="12" rx="4" ry="9" />
+      <path d="M3 12h18" />
+    </symbol>
+    <symbol id="shield" viewBox="0 0 24 24">
+      <path d="m12 2 8 4v6c0 5-8 10-8 10S4 17 4 12V6zM8 12l3 3 5-6" />
+    </symbol>
+  </defs>
+</svg>
+<div class="shell">
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="Voiceline home"
+      ><span class="brand-icon"><i></i><i></i><i></i><i></i></span
+      >voiceline<span class="brand-dot">.</span></a
+    >
+    <div class="workspace">
+      <span class="workspace-avatar">P</span>
+      <div>Personal workspace<small>Your words, in one place</small></div>
+    </div>
+    <div class="nav-label">WORKSPACE</div>
+    <nav aria-label="Main navigation">
+      <button [class.selected]="view()==='studio'" (click)="view.set('studio')">
+        <svg><use href="#grid" /></svg>Transcription studio<span
+          class="nav-dot"
+          *ngIf="view()==='studio'"
+        ></span>
+      </button>
+      <button
+        [class.selected]="view()==='history'"
+        (click)="view.set('history'); refresh()"
+      >
+        <svg><use href="#history" /></svg>My transcripts<span class="count"
+          >{{total()}}</span
+        >
+      </button>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="language-art">
+        <span>अ</span><span>A</span><span>あ</span>
+      </div>
+      <strong>Think in any language.</strong>
+      <p>Let your words flow. We’ll take care of the text.</p>
+      <span class="small-label"
+        ><svg><use href="#globe" /></svg> Multilingual by nature</span
+      >
+    </div>
+    <div class="profile">
+      <span class="profile-avatar">Y</span>
+      <div>Your workspace<small>Private to this browser</small></div>
+      <span class="online-dot"></span>
+    </div>
+  </aside>
+  <div class="main-area">
+    <header class="topbar">
+      <div>
+        <span class="breadcrumb">Workspace</span
+        ><span class="slash">/</span>{{view()==='studio'?'Transcription
+        studio':'My transcripts'}}
+      </div>
+      <span class="service-pill" [class.unavailable]="!ready()"
+        ><i></i>{{ready()?'Speech service ready':backend()?'Speech service
+        unavailable':'Connecting to services'}}</span
+      >
+    </header>
+    <main>
+      <div class="page-heading">
+        <div>
+          <div class="eyebrow">YOUR VOICE. IN WORDS.</div>
+          <h1>{{view()==='studio'?'Speak freely.':'Your words, kept.'}}</h1>
+          <p>
+            {{view()==='studio'?'From a passing thought to your next big idea.
+            Capture it as you speak.':'Revisit, refine, and make something of
+            what you said.'}}
+          </p>
+        </div>
+        <span class="heading-tag"
+          ><svg><use href="#globe" /></svg> हिन्दी + English + more</span
+        >
+      </div>
+      <div class="alert error" role="alert" *ngIf="error()">
+        <span>{{error()}}</span
+        ><button aria-label="Dismiss error" (click)="error.set('')">×</button>
+      </div>
+      <div class="alert success" role="status" *ngIf="notice()">
+        <span>{{notice()}}</span
+        ><button aria-label="Dismiss notification" (click)="notice.set('')">
+          ×
+        </button>
+      </div>
+      @if(view()==='studio') {
+      <div class="studio-grid">
+        <section class="recorder card" aria-labelledby="record-heading">
+          <div class="card-top">
+            <h2 id="record-heading">
+              <span class="tiny-dot"></span>New recording
+            </h2>
+            <span class="tag">LIVE TRANSCRIPTION</span>
+          </div>
+          <label class="field-label" for="title">RECORDING TITLE</label
+          ><input
+            id="title"
+            class="title-input"
+            maxlength="120"
+            [(ngModel)]="title"
+            [disabled]="active"
+            placeholder="Give your thought a name"
+          />
+          <div
+            class="recording-stage"
+            [class.is-recording]="state()==='recording'"
+          >
+            <div class="mic-orbit">
+              <div class="mic-circle">
+                <svg><use href="#mic" /></svg>
+              </div>
+            </div>
+            <h3>
+              {{state()==='recording'?'Listening to
+              you…':state()==='connecting'?'Getting
+              ready…':state()==='stopping'?'Finishing your transcript…':'A
+              little space for your voice.'}}
+            </h3>
+            <p>
+              {{state()==='recording'?'Keep talking. Switch languages
+              naturally.':state()==='stopping'?'Saving the last few
+              words.':state()==='connecting'?'Allow microphone access to get
+              started.':'One language, two languages. Just be yourself.'}}
+            </p>
+            <div class="waveform" aria-hidden="true">
+              @for(bar of bars;track $index){<span
+                [style.height.px]="state()==='recording'?8+bar*level():5+bar*.14"
+                [class.live]="state()==='recording'"
+              ></span
+              >}
+            </div>
+            <div class="timer">
+              <span [class.live-dot]="state()==='recording'"></span
+              >{{time(seconds())}}<small>/ 10:00</small>
+            </div>
+            @if(state()==='recording'){<button
+              class="button primary stop"
+              (click)="stop()"
+            >
+              <span class="stop-square"></span>Stop & save</button
+            >} @else if(active){<button class="button primary" disabled>
+              <mat-spinner
+                diameter="17"
+              />{{state()==='connecting'?'Connecting':'Saving recording'}}</button
+            >} @else{<button
+              class="button primary"
+              [disabled]="!ready()"
+              (click)="start()"
+            >
+              <svg><use href="#mic" /></svg>Start recording</button
+            >}
+            <div class="record-hint">
+              {{ready()?'Microphone access required · Up to 10 minutes':'Start
+              the speech service to enable recording'}}
+            </div>
+          </div>
+          <div class="recorder-footer">
+            <span
+              ><svg><use href="#globe" /></svg>Auto-detect language</span
+            ><span class="privacy"
+              ><svg><use href="#shield" /></svg>Audio isn’t stored</span
+            >
+          </div>
+        </section>
+        <section class="transcript card" aria-labelledby="transcript-heading">
+          <div class="card-top">
+            <h2 id="transcript-heading">Live transcript</h2>
+            <span class="draft-pill" *ngIf="active"
+              >{{state()==='recording'?'● Live':'Processing'}}</span
+            ><span class="tag" *ngIf="!active"
+              >{{confirmed()?'SAVED':'READY WHEN YOU ARE'}}</span
+            >
+          </div>
+          @if(confirmed()||partial()) {
+          <div class="transcript-content" aria-live="polite" aria-atomic="true">
+            <span>{{confirmed()}}</span
+            ><span class="partial"> {{partial()}}</span
+            ><span class="text-cursor" *ngIf="state()==='recording'"></span>
+          </div>
+          } @else {
+          <div class="transcript-placeholder">
+            <div class="paper-icon">
+              <svg><use href="#file" /></svg><span>“</span>
+            </div>
+            <h3>Your words will appear here</h3>
+            <p>
+              Start a recording and watch your thoughts<br />turn into text, a
+              few moments at a time.
+            </p>
+            <div class="example">
+              <span>TRY SAYING</span>
+              <p>“आज की meeting was really productive.”</p>
+            </div>
+          </div>
+          }
+          <div class="transcript-footer">
+            <span
+              >{{words}} words<span class="separator">·</span>{{partial()?'Draft
+              text may change':'Saved as you speak'}}</span
+            >
+            <div>
+              <button
+                class="icon-button"
+                aria-label="Copy transcript"
+                [disabled]="!confirmed()"
+                (click)="copy(confirmed())"
+              >
+                <svg><use href="#copy" /></svg></button
+              ><button
+                class="icon-button"
+                aria-label="Download transcript"
+                [disabled]="!confirmed()"
+                (click)="download(confirmed(),title)"
+              >
+                <svg><use href="#download" /></svg>
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div class="tips">
+        <div>
+          <span class="tip-number">01</span>
+          <p>
+            <strong>Speak naturally</strong>No special commands. Just your
+            voice.
+          </p>
+        </div>
+        <div>
+          <span class="tip-number">02</span>
+          <p>
+            <strong>Mix your languages</strong>Hindi, English, and everything
+            between.
+          </p>
+        </div>
+        <div>
+          <span class="tip-number">03</span>
+          <p>
+            <strong>Make it yours</strong>Find, edit, and export from your
+            history.
+          </p>
+        </div>
+      </div>
+      }
+      <section class="history-section" aria-labelledby="history-heading">
+        <div class="section-heading">
+          <div>
+            <h2 id="history-heading">
+              {{view()==='studio'?'Recent transcripts':'All transcripts'}}<span
+                class="number-badge"
+                >{{total()}}</span
+              >
+            </h2>
+            <p>A home for every conversation and lightbulb moment.</p>
+          </div>
+          @if(view()==='studio'){<button
+            class="text-button"
+            (click)="view.set('history');refresh()"
+          >
+            View all transcripts<svg><use href="#arrow" /></svg></button
+          >}@else{<button
+            class="button primary small"
+            (click)="view.set('studio')"
+          >
+            + New recording</button
+          >}
+        </div>
+        <div class="history-card card">
+          <div class="history-tools">
+            <label class="search"
+              ><svg><use href="#search" /></svg
+              ><input
+                aria-label="Search transcripts"
+                placeholder="Search your transcripts…"
+                [(ngModel)]="query"
+                (ngModelChange)="search()" /></label
+            ><span class="sort-label">Newest first ↓</span>
+          </div>
+          @if(loading()){
+          <div class="empty-history">
+            <mat-spinner diameter="28" />
+            <p>Loading your transcripts…</p>
+          </div>
+          } @else if(items().length===0){
+          <div class="empty-history">
+            <span class="empty-icon"
+              ><svg><use href="#history" /></svg
+            ></span>
+            <h3>
+              {{query?'No matching transcripts':'Your next idea belongs here.'}}
+            </h3>
+            <p>
+              {{query?'Try a different title or a few words from the
+              transcript.':'Your recordings will be saved here, ready to revisit
+              and refine.'}}
+            </p>
+            @if(!query&&view()==='history'){<button
+              class="text-button"
+              (click)="view.set('studio')"
+            >
+              Make your first recording <svg><use href="#arrow" /></svg></button
+            >}
+          </div>
+          } @else{
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>TRANSCRIPT</th>
+                  <th>CREATED</th>
+                  <th>DURATION</th>
+                  <th>STATUS</th>
+                  <th><span class="sr-only">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for(item of items();track item.id){
+                <tr>
+                  <td>
+                    <button class="transcript-link" (click)="open(item)">
+                      <span class="file-badge"
+                        ><svg><use href="#file" /></svg></span
+                      ><span
+                        ><strong>{{item.title}}</strong
+                        ><small
+                          >{{item.text||'No confirmed text yet'}}</small
+                        ></span
+                      >
+                    </button>
+                  </td>
+                  <td>
+                    {{item.createdAt|date:'MMM d, yyyy'}}<small
+                      >{{item.createdAt|date:'h:mm a'}}</small
+                    >
+                  </td>
+                  <td class="mono">{{time(item.durationMs/1000)}}</td>
+                  <td>
+                    <span
+                      class="status-badge"
+                      [class.complete]="item.status==='COMPLETED'"
+                      >{{item.status|titlecase}}</span
+                    >
+                  </td>
+                  <td>
+                    <button
+                      class="icon-button danger"
+                      [disabled]="item.status==='RECORDING'"
+                      [attr.aria-label]="'Delete '+item.title"
+                      (click)="deleting.set(item)"
+                    >
+                      <svg><use href="#trash" /></svg>
+                    </button>
+                  </td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          } @if(pages()>1){
+          <div class="pagination">
+            <span>Page {{page()+1}} of {{pages()}}</span>
+            <div>
+              <button
+                class="button secondary small"
+                [disabled]="page()===0"
+                (click)="changePage(-1)"
+              >
+                Previous</button
+              ><button
+                class="button secondary small"
+                [disabled]="page()+1>=pages()"
+                (click)="changePage(1)"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+          }
+        </div>
+      </section>
+      <footer class="page-footer">
+        <span
+          ><span class="footer-mark">◒</span> Made for the way you speak.</span
+        ><span
+          >Self-hosted speech recognition<span class="separator">·</span
+          >Voiceline</span
+        >
+      </footer>
+    </main>
+  </div>
+</div>
+@if(selected();as item){
+<div class="modal-backdrop">
+  <section
+    class="modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="edit-heading"
+    cdkTrapFocus
+    [cdkTrapFocusAutoCapture]="true"
+  >
+    <div class="modal-heading">
+      <div>
+        <span class="eyebrow">YOUR TRANSCRIPT</span>
+        <h2 id="edit-heading">A second look.</h2>
+      </div>
+      <button
+        class="icon-button"
+        aria-label="Close transcript"
+        [disabled]="saving()"
+        (click)="selected.set(null)"
+      >
+        <svg><use href="#close" /></svg>
+      </button>
+    </div>
+    <label for="edit-title">Title</label
+    ><input
+      id="edit-title"
+      cdkFocusInitial
+      maxlength="120"
+      [(ngModel)]="editTitle"
+      [disabled]="item.status==='RECORDING'"
+    /><label for="edit-text">Transcript</label
+    ><textarea
+      id="edit-text"
+      rows="10"
+      maxlength="100000"
+      [(ngModel)]="editText"
+      [disabled]="item.status==='RECORDING'"
+    ></textarea>
+    <p class="modal-note">
+      {{item.status==='RECORDING'?'Stop recording before editing.':'Your
+      original recognized text is preserved when you edit.'}}
+    </p>
+    <details *ngIf="item.originalText!==item.text">
+      <summary>Original recognized text</summary>
+      <p class="original">{{item.originalText}}</p>
+    </details>
+    <div class="modal-actions">
+      <button class="button secondary" (click)="download(editText,editTitle)">
+        <svg><use href="#download" /></svg>Download</button
+      ><button
+        class="button primary"
+        [disabled]="saving()||!editTitle.trim()||item.status==='RECORDING'"
+        (click)="save()"
+      >
+        {{saving()?'Saving…':'Save changes'}}
+      </button>
+    </div>
+  </section>
+</div>
+} @if(deleting();as item){
+<div class="modal-backdrop">
+  <section
+    class="modal compact"
+    role="alertdialog"
+    aria-modal="true"
+    aria-labelledby="delete-heading"
+    cdkTrapFocus
+    [cdkTrapFocusAutoCapture]="true"
+  >
+    <h2 id="delete-heading">Delete this transcript?</h2>
+    <p>“{{item.title}}” will be permanently removed from your history.</p>
+    <div class="modal-actions">
+      <button
+        cdkFocusInitial
+        class="button secondary"
+        [disabled]="saving()"
+        (click)="deleting.set(null)"
+      >
+        Keep transcript</button
+      ><button
+        class="button destructive"
+        [disabled]="saving()"
+        (click)="remove()"
+      >
+        {{saving()?'Deleting…':'Delete transcript'}}
+      </button>
+    </div>
+  </section>
+</div>
+}

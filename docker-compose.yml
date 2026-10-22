@@ -1,0 +1,76 @@
+name: voiceline
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: voiceline
+      MYSQL_USER: voiceline
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_PASSWORD mysql -h 127.0.0.1 -u voiceline -D voiceline -e 'SELECT 1' >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+  speech:
+    build: ./speech-service
+    environment:
+      SPEECH_TOKEN: ${SPEECH_TOKEN:?Set SPEECH_TOKEN in .env}
+      WHISPER_MODEL: ${WHISPER_MODEL:-small}
+      WHISPER_THREADS: ${WHISPER_THREADS:-4}
+      MAX_STREAMS: ${MAX_STREAMS:-2}
+    volumes:
+      - whisper-models:/models
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 40
+      start_period: 120s
+    restart: unless-stopped
+  backend:
+    build: ./backend
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/voiceline?connectionTimeZone=UTC
+      DB_USER: voiceline
+      DB_PASSWORD: ${DB_PASSWORD}
+      SPEECH_URL: ws://speech:8000/stream
+      SPEECH_HEALTH_URL: http://speech:8000/health
+      SPEECH_TOKEN: ${SPEECH_TOKEN}
+      APP_ORIGIN: ${APP_ORIGIN:-http://localhost:4200}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      MAX_STREAMS: ${MAX_STREAMS:-2}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+  frontend:
+    build: ./frontend
+    ports:
+      - "127.0.0.1:4200:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+  gateway:
+    image: caddy:2-alpine
+    profiles: [cloud]
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    volumes:
+      - ./infra/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - frontend
+    restart: unless-stopped
+volumes:
+  mysql-data:
+  whisper-models:
+  caddy-data:
+  caddy-config:
