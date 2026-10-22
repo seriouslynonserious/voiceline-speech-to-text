@@ -4,6 +4,10 @@ An Angular / Spring Boot / MySQL application with a self-hosted Whisper speech s
 
 **Cloud deployment:** not published yet; hosting will be selected after the local build. The Docker configuration below runs the complete application, including MySQL. No paid speech API is needed.
 
+See [VALIDATION.md](VALIDATION.md) for measured latency, passing tests, and the unresolved Hindi–English accuracy limitation.
+
+![Voiceline transcription studio](docs/studio-preview.jpg)
+
 ## Features
 
 - Angular 21 standalone application, responsive studio and dashboard, accessible dialogs.
