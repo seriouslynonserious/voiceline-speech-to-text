@@ -479,6 +479,7 @@
       <summary>Original recognized text</summary>
       <p class="original">{{item.originalText}}</p>
     </details>
+    <p class="alert error" role="alert" *ngIf="error()">{{error()}}</p>
     <div class="modal-actions">
       <button class="button secondary" (click)="download(editText,editTitle)">
         <svg><use href="#download" /></svg>Download</button
@@ -504,6 +505,7 @@
   >
     <h2 id="delete-heading">Delete this transcript?</h2>
     <p>“{{item.title}}” will be permanently removed from your history.</p>
+    <p class="alert error" role="alert" *ngIf="error()">{{error()}}</p>
     <div class="modal-actions">
       <button
         cdkFocusInitial

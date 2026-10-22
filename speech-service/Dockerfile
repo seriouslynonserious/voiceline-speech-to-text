@@ -1,5 +1,5 @@
 FROM python:3.11-slim
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 MODEL_CACHE=/models
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 MODEL_CACHE=/models HF_HOME=/models/huggingface XDG_CACHE_HOME=/models/cache
 WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt .

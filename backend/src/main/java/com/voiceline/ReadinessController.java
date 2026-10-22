@@ -12,7 +12,10 @@ import org.springframework.web.bind.annotation.*;
 public class ReadinessController {
   private final String url;
   private final HttpClient client =
-      HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2)).build();
+      HttpClient.newBuilder()
+          .version(HttpClient.Version.HTTP_1_1)
+          .connectTimeout(Duration.ofSeconds(2))
+          .build();
 
   public ReadinessController(@Value("${app.speech-health-url}") String url) {
     this.url = url;

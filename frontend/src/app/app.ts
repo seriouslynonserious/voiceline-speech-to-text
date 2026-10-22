@@ -9,7 +9,7 @@ import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { A11yModule } from "@angular/cdk/a11y";
-import { PcmResampler } from "./audio-resampler.mjs";
+import { PcmResampler, PcmPacketizer } from "./audio-resampler.mjs";
 interface Transcript {
   id: string;
   title: string;
@@ -68,7 +68,6 @@ export class AppComponent implements OnInit, OnDestroy {
   private searchTimer?: ReturnType<typeof setTimeout>;
   private timeout?: ReturnType<typeof setTimeout>;
   private flushDone?: () => void;
-  private recordId = "";
   private listRequest = 0;
   @HostListener("document:keydown.escape") escape() {
     if (!this.saving()) {
@@ -206,7 +205,6 @@ export class AppComponent implements OnInit, OnDestroy {
       const record: Transcript = await this.api("/transcriptions", "POST", {
         title: this.title.trim() || "Untitled recording",
       });
-      this.recordId = record.id;
       const ws = new WebSocket(
         `${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/api/transcriptions/${record.id}/stream`,
       );
@@ -266,13 +264,16 @@ export class AppComponent implements OnInit, OnDestroy {
   }
   private beginAudio(ws: WebSocket) {
     const ctx = this.ctx!,
-      resampler = new PcmResampler(ctx.sampleRate);
+      resampler = new PcmResampler(ctx.sampleRate),
+      packetizer = new PcmPacketizer();
     this.source = ctx.createMediaStreamSource(this.media!);
     this.worklet = new AudioWorkletNode(ctx, "pcm-capture");
     this.mute = ctx.createGain();
     this.mute.gain.value = 0;
     this.worklet.port.onmessage = ({ data }) => {
       if (data === "flushed") {
+        const tail = packetizer.flush();
+        if (tail.byteLength && ws.readyState === WebSocket.OPEN) ws.send(tail);
         this.flushDone?.();
         return;
       }
@@ -286,7 +287,7 @@ export class AppComponent implements OnInit, OnDestroy {
       for (const v of audio) energy += v * v;
       this.level.set(Math.min(1, Math.sqrt(energy / audio.length) * 8));
       const pcm = resampler.process(audio);
-      if (pcm.byteLength) ws.send(pcm);
+      for (const packet of packetizer.push(pcm)) ws.send(packet);
     };
     this.source.connect(this.worklet);
     this.worklet.connect(this.mute);
@@ -345,6 +346,7 @@ export class AppComponent implements OnInit, OnDestroy {
     );
   }
   async open(t: Transcript) {
+    this.error.set("");
     try {
       const fresh = await this.api("/transcriptions/" + t.id);
       this.editTitle = fresh.title;
